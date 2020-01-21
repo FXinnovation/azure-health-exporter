@@ -78,6 +78,7 @@ To configure it, you must pass the envionment variable, and you can bind-mount a
 
 ```bash
 docker run -p 9613:9613 -v /path/on/host/config/config.yml:/opt/azure-health-exporter/config/config.yml -e AZURE_SUBSCRIPTION_ID="my_subscription_id" -e AZURE_TENANT_ID="my_tenant_id" -e AZURE_CLIENT_ID="my_client_id" -e AZURE_CLIENT_SECRET="my_client_secret" fxinnovation/azure-health-exporter:<git-branch>
+```
 
 ## Exposed metrics
 
