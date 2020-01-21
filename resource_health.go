@@ -8,14 +8,13 @@ import (
 
 // ResourceHealthClient is the client implementation to ResourceHealth API
 type ResourceHealthClient struct {
-	Session   *AzureSession
-	Client    *resourcehealth.AvailabilityStatusesClient
-	Resources Resources
+	Session *AzureSession
+	Client  *resourcehealth.AvailabilityStatusesClient
 }
 
 // ResourceHealth client interface
 type ResourceHealth interface {
-	GetResourcesHealth(resourceTags map[string]string) (*[]resourcehealth.AvailabilityStatus, error)
+	GetAllAvailabilityStatuses() (*[]resourcehealth.AvailabilityStatus, error)
 	GetSubscriptionID() string
 }
 
@@ -24,12 +23,10 @@ func NewResourceHealth(session *AzureSession) ResourceHealth {
 
 	client := resourcehealth.NewAvailabilityStatusesClient(session.SubscriptionID)
 	client.Authorizer = session.Authorizer
-	resources := NewResources(session)
 
 	return &ResourceHealthClient{
-		Session:   session,
-		Client:    &client,
-		Resources: resources,
+		Session: session,
+		Client:  &client,
 	}
 }
 
@@ -38,23 +35,14 @@ func (rc *ResourceHealthClient) GetSubscriptionID() string {
 	return rc.Session.SubscriptionID
 }
 
-// GetResourcesHealth fetch Resources Health
-func (rc *ResourceHealthClient) GetResourcesHealth(resourceTags map[string]string) (*[]resourcehealth.AvailabilityStatus, error) {
-	var rhList []resourcehealth.AvailabilityStatus
-
-	resources, err := rc.Resources.GetResources(resourceTags)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, resource := range *resources {
-		rh, err := rc.Client.GetByResource(context.Background(), *resource.ID, "", "")
+// GetAllAvailabilityStatuses fetch all Resources Health availability statuses of the subscription
+func (rc *ResourceHealthClient) GetAllAvailabilityStatuses() (*[]resourcehealth.AvailabilityStatus, error) {
+	var asList []resourcehealth.AvailabilityStatus
+	for it, err := rc.Client.ListBySubscriptionIDComplete(context.Background(), "", ""); it.NotDone(); err = it.Next() {
 		if err != nil {
 			return nil, err
 		}
-
-		rhList = append(rhList, rh)
+		asList = append(asList, it.Value())
 	}
-
-	return &rhList, nil
+	return &asList, nil
 }
