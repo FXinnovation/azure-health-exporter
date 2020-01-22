@@ -1,0 +1,16 @@
+expose_azure_tag_info: true
+
+resource_configurations:
+
+  - resource_tags:
+      Monitoring: "enabled"
+    resource_types:
+      - "Microsoft.Compute/virtualMachines"
+
+  - resource_tags:
+      Client: "Alice"
+      Env: "Prod"
+    resource_types:
+      - "Microsoft.Web/serverfarms"
+      - "Microsoft.Web/sites"
+

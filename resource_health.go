@@ -14,6 +14,7 @@ type ResourceHealthClient struct {
 
 // ResourceHealth client interface
 type ResourceHealth interface {
+	GetAvailabilityStatus(resourceURI string) (*resourcehealth.AvailabilityStatus, error)
 	GetAllAvailabilityStatuses() (*[]resourcehealth.AvailabilityStatus, error)
 	GetSubscriptionID() string
 }
@@ -45,4 +46,14 @@ func (rc *ResourceHealthClient) GetAllAvailabilityStatuses() (*[]resourcehealth.
 		asList = append(asList, it.Value())
 	}
 	return &asList, nil
+}
+
+// GetAvailabilityStatus fetch all Resources Health availability statuses of the subscription
+func (rc *ResourceHealthClient) GetAvailabilityStatus(resourceURI string) (*resourcehealth.AvailabilityStatus, error) {
+	as, err := rc.Client.GetByResource(context.Background(), resourceURI, "", "")
+	if err != nil {
+		return nil, err
+	}
+
+	return &as, nil
 }

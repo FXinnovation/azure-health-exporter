@@ -24,6 +24,14 @@ var (
 
 // Config of the exporter
 type Config struct {
+	ResourceConfigurations []ResourceConfiguration `yaml:"resource_configurations"`
+	ExposeAzureTagInfo     bool                    `yaml:"expose_azure_tag_info"`
+}
+
+// ResourceConfiguration specify resources to monitor (by types and tags)
+type ResourceConfiguration struct {
+	ResourceTags  map[string]string `yaml:"resource_tags"`
+	ResourceTypes []string          `yaml:"resource_types"`
 }
 
 func init() {

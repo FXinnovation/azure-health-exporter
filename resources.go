@@ -15,7 +15,7 @@ type ResourcesClient struct {
 
 // Resources client interface
 type Resources interface {
-	GetResources(resourceTags map[string]string) (*[]resources.GenericResource, error)
+	GetResources(resourceType string, resourceTags map[string]string) (*[]resources.GenericResource, error)
 }
 
 // NewResources returns a new Resources client
@@ -29,11 +29,11 @@ func NewResources(session *AzureSession) Resources {
 	}
 }
 
-// GetResources return resources by tags (if tags map is not empty).
+// GetResources return resources by type tags (if tags map is not empty).
 // A resource must match all tag parameters in order to be fetched
-func (rc *ResourcesClient) GetResources(resourceTags map[string]string) (*[]resources.GenericResource, error) {
-	// TODO : filter by tag here
-	filter := fmt.Sprintf("")
+func (rc *ResourcesClient) GetResources(resourceType string, resourceTags map[string]string) (*[]resources.GenericResource, error) {
+
+	filter := fmt.Sprintf("resourceType eq '%s'", resourceType)
 	resList, err := rc.list(filter)
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func (rc *ResourcesClient) GetResources(resourceTags map[string]string) (*[]reso
 		include := true
 		if resourceTags != nil {
 			for name, value := range resourceTags {
-				if *resource.Tags[name] != value {
+				if resVal, ok := resource.Tags[name]; (ok && *resVal != value) || !ok {
 					include = false
 					break
 				}

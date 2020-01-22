@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/Azure/azure-sdk-for-go/services/resourcehealth/mgmt/2017-07-01/resourcehealth"
+	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2019-05-01/resources"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
 )
@@ -31,42 +32,55 @@ func (c *ResourceHealthCollector) Describe(ch chan<- *prometheus.Desc) {
 // Collect metrics from Resource Health API
 func (c *ResourceHealthCollector) Collect(ch chan<- prometheus.Metric) {
 
-	// TODO Get Resources (by tag eventually), and compare lists by lowercased ResourceGroup.ResourceName.SubResourceName
-	// pass the 2 list to CollectAvailabilityUp: creates logic from asList and labels from Resources
+	for _, resourceConfiguration := range config.ResourceConfigurations {
+		for _, resourceType := range resourceConfiguration.ResourceTypes {
+			resourceList, err := c.resources.GetResources(resourceType, resourceConfiguration.ResourceTags)
+			if err != nil {
+				log.Errorf("Failed to get resource list: %v", err)
+				ch <- prometheus.NewInvalidMetric(azureErrorDesc, err)
+				return
+			}
 
-	asList, err := c.resourceHealth.GetAllAvailabilityStatuses()
+			for _, resource := range *resourceList {
+				as, err := c.resourceHealth.GetAvailabilityStatus(*resource.ID)
+				if err != nil {
+					log.Errorf("Failed to get availability status: %v", err)
+					ch <- prometheus.NewInvalidMetric(azureErrorDesc, err)
+					return
+				}
+
+				c.CollectAvailabilityUp(ch, as, &resource)
+			}
+		}
+	}
+}
+
+// CollectAvailabilityUp converts Resource Health Availability status as an UP metric
+func (c *ResourceHealthCollector) CollectAvailabilityUp(ch chan<- prometheus.Metric, as *resourcehealth.AvailabilityStatus,
+	resource *resources.GenericResource) {
+
+	// Only the `Unavailable` status can be used with confidence to considere availability "down"
+	up := 1.0
+	if as.Properties.AvailabilityState == resourcehealth.Unavailable {
+		up = 0
+	}
+
+	labels, err := ParseResourceID(*resource.ID)
 	if err != nil {
-		log.Errorf("Failed to get availability statuses list: %v", err)
+		log.Errorf("Failed to parse resource ID: %v", err)
 		ch <- prometheus.NewInvalidMetric(azureErrorDesc, err)
 		return
 	}
 
-	c.CollectAvailabilityUp(ch, asList)
-}
+	labels["subscription_id"] = c.resourceHealth.GetSubscriptionID()
 
-// CollectAvailabilityUp converts Resource Health Availability as an UP metric
-func (c *ResourceHealthCollector) CollectAvailabilityUp(ch chan<- prometheus.Metric, asList *[]resourcehealth.AvailabilityStatus) {
+	ch <- prometheus.MustNewConstMetric(
+		prometheus.NewDesc("resource_health_availability_up", "Resource health availability that relies on signals from different Azure services to assess whether a resource is healthy", nil, labels),
+		prometheus.GaugeValue,
+		up,
+	)
 
-	for _, as := range *asList {
-		up := 1.0
-		if as.Properties.AvailabilityState == resourcehealth.Unavailable {
-			up = 0
-		}
-
-		labels, err := ParseResourceID(*as.ID)
-		if err != nil {
-			log.Errorf("Skipping availability statuses: %s", err)
-			continue
-		}
-
-		labels["subscription_id"] = c.resourceHealth.GetSubscriptionID()
-
-		ch <- prometheus.MustNewConstMetric(
-			prometheus.NewDesc("resource_health_availability_up", "Resource health availability that relies on signals from different Azure services to assess whether a resource is healthy", nil, labels),
-			prometheus.GaugeValue,
-			up,
-		)
-
-		// TODO add optional azure_tag_info
+	if config.ExposeAzureTagInfo {
+		ExportAzureTagInfo(ch, resource.Tags, resource.Type, labels)
 	}
 }
