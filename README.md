@@ -2,9 +2,9 @@
 
 **Warning, this exporter is still a work in progress**
 
-Prometheus exporter exposing Azure Health status as metrics
+Prometheus exporter exposing Azure [Resource health](https://docs.microsoft.com/en-us/azure/service-health/resource-health-overview) status as `up` metrics.
 
-This exporter does not export metrics from Azure Monitor API, use [azure_metrics_exporter](https://github.com/RobustPerception/azure_metrics_exporter) for that.
+This exporter does not export metrics from Azure Monitor API, please use the [azure_metrics_exporter](https://github.com/RobustPerception/azure_metrics_exporter) for that. Note that the `azure-health-exporter` is following the same label naming used in the `azure_metrics_exporter`, in order to ease metric joins in PromQL queries.
 
 ## Getting Started
 
