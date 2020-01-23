@@ -62,7 +62,17 @@ make test
 
 ## Configuration
 
-No configuration is supported yet in `config/config.yml` (**WIP**)
+Configuration is usually done in `config/config.yml`.
+
+An example can be found in
+[config/config_example.yml](https://github.com/FXinnovation/azure-health-exporter/blob/master/config/config_example.yml).
+
+Configuration element | Description
+--------------------- | -----------
+resource_configurations | (Mandatory) A list of configuration elements to select resources to monitor for health
+resource_types | (Mandatory) A list of resource type to filter resources (must be part of the [supported type list](https://docs.microsoft.com/en-us/azure/service-health/resource-health-checks-resource-types))
+resource_tags | (Optional) A map of resource tag name and value to filter resources
+expose_azure_tag_info | (Optional, default to `false`) Whether or not to expose the `azure_tag_info` metric
 
 ## Docker image
 
@@ -84,7 +94,8 @@ docker run -p 9613:9613 -v /path/on/host/config/config.yml:/opt/azure-health-exp
 
 Metric | Description
 ------ | -----------
-resource_health_availability_up | Resource health availability that relies on signals from different Azure services to assess whether a resource is healthy
+resource_health_availability_up | [Resource health](https://docs.microsoft.com/en-us/azure/service-health/resource-health-overview) availability that relies on signals from different Azure services to assess whether a resource is healthy. This UP metric is 0 if availability status is `Unavailable`, and is 1 otherwise.
+azure_tag_info | Tags of the Azure resource
 
 ## Contributing
 
