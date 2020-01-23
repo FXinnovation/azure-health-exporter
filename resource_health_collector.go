@@ -73,6 +73,7 @@ func (c *ResourceHealthCollector) CollectAvailabilityUp(ch chan<- prometheus.Met
 	}
 
 	labels["subscription_id"] = c.resourceHealth.GetSubscriptionID()
+	labels["resource_type"] = *resource.Type
 
 	ch <- prometheus.MustNewConstMetric(
 		prometheus.NewDesc("resource_health_availability_up", "Resource health availability that relies on signals from different Azure services to assess whether a resource is healthy", nil, labels),
