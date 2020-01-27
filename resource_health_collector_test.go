@@ -104,3 +104,49 @@ func TestCollect_GetAvailabilityStatus_Error(t *testing.T) {
 		t.Errorf("Wrong status code: got %v, want %v", status, http.StatusInternalServerError)
 	}
 }
+
+func TestCollect_CollectAvailabilityUp_Ok(t *testing.T) {
+	r := MockedResources{}
+	rh := MockedResourceHealth{}
+	collector := ResourceHealthCollector{
+		resourceHealth: &rh,
+		resources:      &r,
+	}
+
+	var resList []resources.GenericResource
+	resourceID := "/subscriptions/my_subscription/resourceGroups/my_rg/providers/Microsoft.Compute/virtualMachines/my_instance"
+	resourceType := "Microsoft.Compute/virtualMachines"
+	resList = append(resList, resources.GenericResource{
+		ID:   &resourceID,
+		Type: &resourceType,
+	})
+	r.On("GetResources", "Microsoft.Compute/virtualMachines", mock.Anything).Return(&resList, nil)
+	var emptyList []resources.GenericResource
+	r.On("GetResources", "Microsoft.Web/serverfarms", mock.Anything).Return(&emptyList, nil)
+	r.On("GetResources", "Microsoft.Web/sites", mock.Anything).Return(&emptyList, nil)
+
+	var as resourcehealth.AvailabilityStatus = resourcehealth.AvailabilityStatus{
+		Properties: &resourcehealth.AvailabilityStatusProperties{
+			AvailabilityState: resourcehealth.Unavailable,
+		},
+	}
+	rh.On("GetAvailabilityStatus", mock.Anything).Return(&as, nil)
+	rh.On("GetSubscriptionID").Return("my_subscription")
+
+	rr := CallExporter(collector)
+
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("Wrong status code: got %v, want %v", status, http.StatusOK)
+	}
+
+	want := `# HELP azure_tag_info Tags of the Azure resource
+# TYPE azure_tag_info gauge
+azure_tag_info{resource_group="my_rg",resource_name="my_instance",resource_type="Microsoft.Compute/virtualMachines",subscription_id="my_subscription"} 1
+# HELP resource_health_availability_up Resource health availability that relies on signals from different Azure services to assess whether a resource is healthy
+# TYPE resource_health_availability_up gauge
+resource_health_availability_up{resource_group="my_rg",resource_name="my_instance",resource_type="Microsoft.Compute/virtualMachines",subscription_id="my_subscription"} 0
+`
+	if rr.Body.String() != want {
+		t.Errorf("Unexpected body: got %v, want %v", rr.Body.String(), want)
+	}
+}
