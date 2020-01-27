@@ -95,7 +95,7 @@ docker run -p 9613:9613 -v /path/on/host/config/config.yml:/opt/azure-health-exp
 Metric | Description
 ------ | -----------
 resource_health_availability_up | [Resource health](https://docs.microsoft.com/en-us/azure/service-health/resource-health-overview) availability that relies on signals from different Azure services to assess whether a resource is healthy. This UP metric is 0 if availability status is `Unavailable`, and is 1 otherwise.
-azure_tag_info | Tags of the Azure resource
+azure_tag_info | Tags of the Azure resource, exposed only if `expose_azure_tag_info` config is set to true
 
 ## Contributing
 
