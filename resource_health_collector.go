@@ -59,7 +59,7 @@ func (c *ResourceHealthCollector) Collect(ch chan<- prometheus.Metric) {
 func (c *ResourceHealthCollector) CollectAvailabilityUp(ch chan<- prometheus.Metric, as *resourcehealth.AvailabilityStatus,
 	resource *resources.GenericResource) {
 
-	// Only the `Unavailable` status can be used with confidence to considere availability "down"
+	// Only the `Unavailable` status can be used with confidence to consider availability "down"
 	up := 1.0
 	if as.Properties.AvailabilityState == resourcehealth.Unavailable {
 		up = 0
