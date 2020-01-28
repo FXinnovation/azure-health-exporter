@@ -29,7 +29,7 @@ func NewResources(session *AzureSession) Resources {
 	}
 }
 
-// GetResources return resources by type tags (if tags map is not empty).
+// GetResources return resources by type and tags
 // A resource must match all tag parameters in order to be fetched
 func (rc *ResourcesClient) GetResources(resourceType string, resourceTags map[string]string) (*[]resources.GenericResource, error) {
 
@@ -44,6 +44,7 @@ func (rc *ResourcesClient) GetResources(resourceType string, resourceTags map[st
 	var filteredList []resources.GenericResource
 	for _, resource := range *resList {
 		include := true
+
 		if resourceTags != nil {
 			for name, value := range resourceTags {
 				if resVal, ok := resource.Tags[name]; (ok && *resVal != value) || !ok {
@@ -51,7 +52,10 @@ func (rc *ResourcesClient) GetResources(resourceType string, resourceTags map[st
 					break
 				}
 			}
+		} else {
+			continue
 		}
+
 		if include {
 			filteredList = append(filteredList, resource)
 		}

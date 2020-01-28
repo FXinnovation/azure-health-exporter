@@ -71,7 +71,7 @@ Configuration element | Description
 --------------------- | -----------
 resource_configurations | (Mandatory) A list of configuration elements to select resources to monitor for health
 resource_types | (Mandatory) A list of resource type to filter resources (must be part of the [supported type list](https://docs.microsoft.com/en-us/azure/service-health/resource-health-checks-resource-types))
-resource_tags | (Optional) A map of resource tag name and value to filter resources
+resource_tags | (Mandatory) A map of resource tag name and value to filter resources
 expose_azure_tag_info | (Optional, default to `false`) Whether or not to expose the `azure_tag_info` metric
 
 ## Docker image
