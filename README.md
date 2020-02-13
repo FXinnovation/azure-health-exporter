@@ -85,7 +85,7 @@ make docker
 The resulting image is named `fxinnovation/azure-health-exporter:<git-branch>`.
 
 The image exposes port 9613 and expects an optional config in `/opt/azure-health-exporter/config.yml`.
-To configure it, you must pass the envionment variables, and you can bind-mount a config from your host:
+To configure it, you must pass the environment variables, and you can bind-mount a config from your host:
 
 ```bash
 docker run -p 9613:9613 -v /path/on/host/config/config.yml:/opt/azure-health-exporter/config/config.yml -e AZURE_SUBSCRIPTION_ID="my_subscription_id" -e AZURE_TENANT_ID="my_tenant_id" -e AZURE_CLIENT_ID="my_client_id" -e AZURE_CLIENT_SECRET="my_client_secret" fxinnovation/azure-health-exporter:<git-branch>
