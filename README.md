@@ -1,7 +1,5 @@
 # azure-health-exporter
 
-**Warning, this exporter is still a work in progress**
-
 Prometheus exporter exposing Azure [Resource health](https://docs.microsoft.com/en-us/azure/service-health/resource-health-overview) status as `up` metrics.
 
 This exporter does not export metrics from Azure Monitor API, please use the [azure_metrics_exporter](https://github.com/RobustPerception/azure_metrics_exporter) for that. Note that the `azure-health-exporter` is following the same label naming used in the `azure_metrics_exporter`, in order to ease metric joins in PromQL queries.
@@ -76,15 +74,18 @@ expose_azure_tag_info | (Optional, default to `false`) Whether or not to expose 
 
 ## Docker image
 
-You can build a docker image using:
+You can run images published in [dockerhub](https://hub.docker.com/r/fxinnovation/azure-health-exporter).
+
+You can also build a docker image using:
 
 ```bash
 make docker
 ```
 
 The resulting image is named `fxinnovation/azure-health-exporter:<git-branch>`.
-It exposes port 9613 and expects an optional config in `/opt/azure-health-exporter/config.yml`.
-To configure it, you must pass the envionment variable, and you can bind-mount a config from your host:
+
+The image exposes port 9613 and expects an optional config in `/opt/azure-health-exporter/config.yml`.
+To configure it, you must pass the envionment variables, and you can bind-mount a config from your host:
 
 ```bash
 docker run -p 9613:9613 -v /path/on/host/config/config.yml:/opt/azure-health-exporter/config/config.yml -e AZURE_SUBSCRIPTION_ID="my_subscription_id" -e AZURE_TENANT_ID="my_tenant_id" -e AZURE_CLIENT_ID="my_client_id" -e AZURE_CLIENT_SECRET="my_client_secret" fxinnovation/azure-health-exporter:<git-branch>
@@ -96,6 +97,17 @@ Metric | Description
 ------ | -----------
 resource_health_availability_up | [Resource health](https://docs.microsoft.com/en-us/azure/service-health/resource-health-overview) availability that relies on signals from different Azure services to assess whether a resource is healthy. This UP metric is 0 if availability status is `Unavailable`, and is 1 otherwise.
 azure_tag_info | Tags of the Azure resource, exposed only if `expose_azure_tag_info` config is set to true
+
+Example:
+
+```
+# HELP resource_health_availability_up Resource health availability that relies on signals from different Azure services to assess whether a resource is healthy
+# TYPE resource_health_availability_up gauge
+resource_health_availability_up{resource_group="my_group",resource_name="my_name",resource_type="Microsoft.Storage/storageAccounts",subscription_id="xxx"} 1
+# HELP azure_tag_info Tags of the Azure resource
+# TYPE azure_tag_info gauge
+azure_tag_info{resource_group="my_group",resource_name="my_name",resource_type="Microsoft.Storage/storageAccounts",subscription_id="xxx",tag_monitoring="enabled"} 1
+```
 
 ## Contributing
 
