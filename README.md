@@ -95,15 +95,15 @@ docker run -p 9613:9613 -v /path/on/host/config/config.yml:/opt/azure-health-exp
 
 Metric | Description
 ------ | -----------
-resource_health_availability_up | [Resource health](https://docs.microsoft.com/en-us/azure/service-health/resource-health-overview) availability that relies on signals from different Azure services to assess whether a resource is healthy. This UP metric is 0 if availability status is `Unavailable`, and is 1 otherwise.
+azure_resource_health_availability_up | [Resource health](https://docs.microsoft.com/en-us/azure/service-health/resource-health-overview) availability that relies on signals from different Azure services to assess whether a resource is healthy. This UP metric is 0 if availability status is `Unavailable`, and is 1 otherwise.
 azure_tag_info | Tags of the Azure resource, exposed only if `expose_azure_tag_info` config is set to true
 
 Example:
 
 ```
-# HELP resource_health_availability_up Resource health availability that relies on signals from different Azure services to assess whether a resource is healthy
-# TYPE resource_health_availability_up gauge
-resource_health_availability_up{resource_group="my_group",resource_name="my_name",resource_type="Microsoft.Storage/storageAccounts",subscription_id="xxx"} 1
+# HELP azure_resource_health_availability_up Resource health availability that relies on signals from different Azure services to assess whether a resource is healthy
+# TYPE azure_resource_health_availability_up gauge
+azure_resource_health_availability_up{resource_group="my_group",resource_name="my_name",resource_type="Microsoft.Storage/storageAccounts",subscription_id="xxx"} 1
 # HELP azure_tag_info Tags of the Azure resource
 # TYPE azure_tag_info gauge
 azure_tag_info{resource_group="my_group",resource_name="my_name",resource_type="Microsoft.Storage/storageAccounts",subscription_id="xxx",tag_monitoring="enabled"} 1

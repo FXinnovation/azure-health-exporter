@@ -139,12 +139,12 @@ func TestCollect_CollectAvailabilityUp_Ok(t *testing.T) {
 		t.Errorf("Wrong status code: got %v, want %v", status, http.StatusOK)
 	}
 
-	want := `# HELP azure_tag_info Tags of the Azure resource
+	want := `# HELP azure_resource_health_availability_up Resource health availability that relies on signals from different Azure services to assess whether a resource is healthy
+# TYPE azure_resource_health_availability_up gauge
+azure_resource_health_availability_up{resource_group="my_rg",resource_name="my_instance",resource_type="Microsoft.Compute/virtualMachines",subscription_id="my_subscription"} 0
+# HELP azure_tag_info Tags of the Azure resource
 # TYPE azure_tag_info gauge
 azure_tag_info{resource_group="my_rg",resource_name="my_instance",resource_type="Microsoft.Compute/virtualMachines",subscription_id="my_subscription"} 1
-# HELP resource_health_availability_up Resource health availability that relies on signals from different Azure services to assess whether a resource is healthy
-# TYPE resource_health_availability_up gauge
-resource_health_availability_up{resource_group="my_rg",resource_name="my_instance",resource_type="Microsoft.Compute/virtualMachines",subscription_id="my_subscription"} 0
 `
 	if rr.Body.String() != want {
 		t.Errorf("Unexpected body: got %v, want %v", rr.Body.String(), want)
