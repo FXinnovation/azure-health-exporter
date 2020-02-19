@@ -36,6 +36,11 @@ func (mock *MockedResourceHealth) GetSubscriptionID() string {
 	return args.Get(0).(string)
 }
 
+func (mock *MockedResourceHealth) GetLastRatelimitRemaining() string {
+	args := mock.Called()
+	return args.Get(0).(string)
+}
+
 func (mock *MockedResources) GetResources(resourceType string, resourceTags map[string]string) (*[]resources.GenericResource, error) {
 	args := mock.Called(resourceType, resourceTags)
 	return args.Get(0).(*[]resources.GenericResource), args.Error(1)
@@ -68,6 +73,9 @@ func TestCollect_GetResources_Error(t *testing.T) {
 		resources:      &r,
 	}
 
+	var asList []resourcehealth.AvailabilityStatus
+	rh.On("GetAllAvailabilityStatuses").Return(&asList, nil)
+
 	var resList []resources.GenericResource
 	r.On("GetResources", mock.Anything, mock.Anything).Return(&resList, errors.New("Unit test Error"))
 
@@ -77,7 +85,7 @@ func TestCollect_GetResources_Error(t *testing.T) {
 	}
 }
 
-func TestCollect_GetAvailabilityStatus_Error(t *testing.T) {
+func TestCollect_GetAllAvailabilityStatuses_Error(t *testing.T) {
 	r := MockedResources{}
 	rh := MockedResourceHealth{}
 	collector := ResourceHealthCollector{
@@ -94,9 +102,8 @@ func TestCollect_GetAvailabilityStatus_Error(t *testing.T) {
 	})
 	r.On("GetResources", mock.Anything, mock.Anything).Return(&resList, nil)
 
-	var as resourcehealth.AvailabilityStatus
-	rh.On("GetAvailabilityStatus", mock.Anything).Return(&as, errors.New("Unit test Error"))
-	rh.On("GetSubscriptionID").Return("my_subscription")
+	var asList []resourcehealth.AvailabilityStatus
+	rh.On("GetAllAvailabilityStatuses", mock.Anything).Return(&asList, errors.New("Unit test Error"))
 
 	rr := CallExporter(collector)
 
@@ -105,7 +112,7 @@ func TestCollect_GetAvailabilityStatus_Error(t *testing.T) {
 	}
 }
 
-func TestCollect_CollectAvailabilityUp_Ok(t *testing.T) {
+func TestCollect_Collect_Ok(t *testing.T) {
 	r := MockedResources{}
 	rh := MockedResourceHealth{}
 	collector := ResourceHealthCollector{
@@ -125,13 +132,24 @@ func TestCollect_CollectAvailabilityUp_Ok(t *testing.T) {
 	r.On("GetResources", "Microsoft.Web/serverfarms", mock.Anything).Return(&emptyList, nil)
 	r.On("GetResources", "Microsoft.Web/sites", mock.Anything).Return(&emptyList, nil)
 
-	var as resourcehealth.AvailabilityStatus = resourcehealth.AvailabilityStatus{
+	var asList []resourcehealth.AvailabilityStatus
+	asID1 := "/subscriptions/my_subscription/resourcegroups/my_rg/providers/microsoft.compute/virtualmachines/my_instance" + AvailabilityStatusIDSuffix
+	asList = append(asList, resourcehealth.AvailabilityStatus{
+		ID: &asID1,
 		Properties: &resourcehealth.AvailabilityStatusProperties{
 			AvailabilityState: resourcehealth.Unavailable,
 		},
-	}
-	rh.On("GetAvailabilityStatus", mock.Anything).Return(&as, nil)
+	})
+	asID2 := "/subscriptions/my_subscription/resourcegroups/my_rg/providers/microsoft.compute/virtualmachines/my_instance2" + AvailabilityStatusIDSuffix
+	asList = append(asList, resourcehealth.AvailabilityStatus{
+		ID: &asID2,
+		Properties: &resourcehealth.AvailabilityStatusProperties{
+			AvailabilityState: resourcehealth.Unavailable,
+		},
+	})
+	rh.On("GetAllAvailabilityStatuses", mock.Anything).Return(&asList, nil)
 	rh.On("GetSubscriptionID").Return("my_subscription")
+	rh.On("GetLastRatelimitRemaining").Return("99")
 
 	rr := CallExporter(collector)
 
@@ -142,6 +160,9 @@ func TestCollect_CollectAvailabilityUp_Ok(t *testing.T) {
 	want := `# HELP azure_resource_health_availability_up Resource health availability that relies on signals from different Azure services to assess whether a resource is healthy
 # TYPE azure_resource_health_availability_up gauge
 azure_resource_health_availability_up{resource_group="my_rg",resource_name="my_instance",resource_type="Microsoft.Compute/virtualMachines",subscription_id="my_subscription"} 0
+# HELP azure_resource_health_ratelimit_remaining_count Azure subscription scoped Resource Health requests remaining (based on X-Ms-Ratelimit-Remaining-Subscription-Resource-Requests header)
+# TYPE azure_resource_health_ratelimit_remaining_count gauge
+azure_resource_health_ratelimit_remaining_count{subscription_id="my_subscription"} 99
 # HELP azure_tag_info Tags of the Azure resource
 # TYPE azure_tag_info gauge
 azure_tag_info{resource_group="my_rg",resource_name="my_instance",resource_type="Microsoft.Compute/virtualMachines",subscription_id="my_subscription"} 1

@@ -1,6 +1,9 @@
 package main
 
 import (
+	"strconv"
+	"strings"
+
 	"github.com/Azure/azure-sdk-for-go/services/resourcehealth/mgmt/2017-07-01/resourcehealth"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2019-05-01/resources"
 	"github.com/prometheus/client_golang/prometheus"
@@ -32,6 +35,15 @@ func (c *ResourceHealthCollector) Describe(ch chan<- *prometheus.Desc) {
 // Collect metrics from Resource Health API
 func (c *ResourceHealthCollector) Collect(ch chan<- prometheus.Metric) {
 
+	// In order to avoid the very low resource health API rate limit,
+	// all availability statuses are fetched in 1 query and then parsed to lookup configured resources
+	asList, err := c.resourceHealth.GetAllAvailabilityStatuses()
+	if err != nil {
+		log.Errorf("Failed to get all availability status: %v", err)
+		ch <- prometheus.NewInvalidMetric(azureErrorDesc, err)
+		return
+	}
+
 	for _, resourceConfiguration := range config.ResourceConfigurations {
 		for _, resourceType := range resourceConfiguration.ResourceTypes {
 			resourceList, err := c.resources.GetResources(resourceType, resourceConfiguration.ResourceTags)
@@ -42,17 +54,16 @@ func (c *ResourceHealthCollector) Collect(ch chan<- prometheus.Metric) {
 			}
 
 			for _, resource := range *resourceList {
-				as, err := c.resourceHealth.GetAvailabilityStatus(*resource.ID)
-				if err != nil {
-					log.Errorf("Failed to get availability status: %v", err)
-					ch <- prometheus.NewInvalidMetric(azureErrorDesc, err)
-					return
+				for _, as := range *asList {
+					if strings.ToLower(*as.ID) == strings.ToLower(*resource.ID+AvailabilityStatusIDSuffix) {
+						c.CollectAvailabilityUp(ch, &as, &resource)
+					}
 				}
-
-				c.CollectAvailabilityUp(ch, as, &resource)
 			}
 		}
 	}
+
+	c.CollectRateLimitRemaining(ch)
 }
 
 // CollectAvailabilityUp converts Resource Health Availability status as an UP metric
@@ -84,4 +95,24 @@ func (c *ResourceHealthCollector) CollectAvailabilityUp(ch chan<- prometheus.Met
 	if config.ExposeAzureTagInfo {
 		ExportAzureTagInfo(ch, resource.Tags, resource.Type, labels)
 	}
+}
+
+// CollectRateLimitRemaining converts X-Ms-Ratelimit-Remaining-Subscription-Resource-Requests header as metric
+func (c *ResourceHealthCollector) CollectRateLimitRemaining(ch chan<- prometheus.Metric) {
+
+	labels := make(map[string]string)
+	labels["subscription_id"] = c.resourceHealth.GetSubscriptionID()
+
+	ratelimitRemaining, err := strconv.ParseFloat(c.resourceHealth.GetLastRatelimitRemaining(), 64)
+	if err != nil {
+		log.Errorf("Failed to parse ratelimit remaining: %v", err)
+		return
+	}
+
+	ch <- prometheus.MustNewConstMetric(
+		prometheus.NewDesc("azure_resource_health_ratelimit_remaining_count", "Azure subscription scoped Resource Health requests remaining (based on X-Ms-Ratelimit-Remaining-Subscription-Resource-Requests header)", nil, labels),
+		prometheus.GaugeValue,
+		ratelimitRemaining,
+	)
+
 }

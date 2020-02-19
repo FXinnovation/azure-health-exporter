@@ -12,6 +12,10 @@ This exporter call Azure API from an existing subscription with these requiremen
 
 * An application must be registered (e.g., Azure Active Directory -> App registrations -> New application registration)
 
+### API rate limit
+
+Note that Azure imposes a very low rate limit for the Resource Health API calls. The Resource Health provider is returning an `X-Ms-Ratelimit-Remaining-Subscription-Resource-Requests` header, which mean, as per [documentation](https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/request-limits-and-throttling#remaining-requests), that the "service has overridden the default limit". The limit has been observed to be 100 requests per 10 minutes. To minimize the impacts, the exporter have been designed to perform only one Resource Health request per scrape. The rate limit remaining count is also exposed as a metric.
+
 ### Prerequisites
 
 To run this project, you will need a [working Go environment](https://golang.org/doc/install).
@@ -97,6 +101,7 @@ Metric | Description
 ------ | -----------
 azure_resource_health_availability_up | [Resource health](https://docs.microsoft.com/en-us/azure/service-health/resource-health-overview) availability that relies on signals from different Azure services to assess whether a resource is healthy. This UP metric is 0 if availability status is `Unavailable`, and is 1 otherwise.
 azure_tag_info | Tags of the Azure resource, exposed only if `expose_azure_tag_info` config is set to true
+azure_resource_health_ratelimit_remaining_count | Azure subscription scoped Resource Health requests remaining (based on `X-Ms-Ratelimit-Remaining-Subscription-Resource-Requests` header)
 
 Example:
 
@@ -107,6 +112,9 @@ azure_resource_health_availability_up{resource_group="my_group",resource_name="m
 # HELP azure_tag_info Tags of the Azure resource
 # TYPE azure_tag_info gauge
 azure_tag_info{resource_group="my_group",resource_name="my_name",resource_type="Microsoft.Storage/storageAccounts",subscription_id="xxx",tag_monitoring="enabled"} 1
+# HELP azure_resource_health_ratelimit_remaining_count Azure subscription scoped Resource Health requests remaining (based on X-Ms-Ratelimit-Remaining-Subscription-Resource-Requests header)
+# TYPE azure_resource_health_ratelimit_remaining_count gauge
+azure_resource_health_ratelimit_remaining_count{subscription_id="xxx"} 98
 ```
 
 ## Contributing
