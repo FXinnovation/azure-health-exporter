@@ -14,7 +14,7 @@ This exporter call Azure API from an existing subscription with these requiremen
 
 ### API rate limit
 
-Note that Azure imposes a very low rate limit for the Resource Health API calls. The Resource Health provider is returning an `X-Ms-Ratelimit-Remaining-Subscription-Resource-Requests` header, which mean, as per [documentation](https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/request-limits-and-throttling#remaining-requests), that the "service has overridden the default limit". The limit has been observed to be 100 requests per 10 minutes. To minimize the impacts, the exporter have been designed to perform only one Resource Health request per scrape. The rate limit remaining count is also exposed as a metric.
+Note that Azure imposes a very low rate limit for the Resource Health API calls. The Resource Health provider is returning an `X-Ms-Ratelimit-Remaining-Subscription-Resource-Requests` header, which means, as per [documentation](https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/request-limits-and-throttling#remaining-requests), that the "service has overridden the default limit". The limit has been observed to be 100 requests per 10 minutes. To minimize impact, the exporter has been designed to perform only one Resource Health request per scrape. The rate limit remaining count is also exposed as a metric.
 
 ### Prerequisites
 
