@@ -110,7 +110,7 @@ func (c *ResourceHealthCollector) CollectRateLimitRemaining(ch chan<- prometheus
 	}
 
 	ch <- prometheus.MustNewConstMetric(
-		prometheus.NewDesc("azure_resource_health_ratelimit_remaining_count", "Azure subscription scoped Resource Health requests remaining (based on X-Ms-Ratelimit-Remaining-Subscription-Resource-Requests header)", nil, labels),
+		prometheus.NewDesc("azure_resource_health_ratelimit_remaining_requests", "Azure subscription scoped Resource Health requests remaining (based on X-Ms-Ratelimit-Remaining-Subscription-Resource-Requests header)", nil, labels),
 		prometheus.GaugeValue,
 		ratelimitRemaining,
 	)

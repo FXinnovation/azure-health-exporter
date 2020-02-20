@@ -160,9 +160,9 @@ func TestCollect_Collect_Ok(t *testing.T) {
 	want := `# HELP azure_resource_health_availability_up Resource health availability that relies on signals from different Azure services to assess whether a resource is healthy
 # TYPE azure_resource_health_availability_up gauge
 azure_resource_health_availability_up{resource_group="my_rg",resource_name="my_instance",resource_type="Microsoft.Compute/virtualMachines",subscription_id="my_subscription"} 0
-# HELP azure_resource_health_ratelimit_remaining_count Azure subscription scoped Resource Health requests remaining (based on X-Ms-Ratelimit-Remaining-Subscription-Resource-Requests header)
-# TYPE azure_resource_health_ratelimit_remaining_count gauge
-azure_resource_health_ratelimit_remaining_count{subscription_id="my_subscription"} 99
+# HELP azure_resource_health_ratelimit_remaining_requests Azure subscription scoped Resource Health requests remaining (based on X-Ms-Ratelimit-Remaining-Subscription-Resource-Requests header)
+# TYPE azure_resource_health_ratelimit_remaining_requests gauge
+azure_resource_health_ratelimit_remaining_requests{subscription_id="my_subscription"} 99
 # HELP azure_tag_info Tags of the Azure resource
 # TYPE azure_tag_info gauge
 azure_tag_info{resource_group="my_rg",resource_name="my_instance",resource_type="Microsoft.Compute/virtualMachines",subscription_id="my_subscription"} 1

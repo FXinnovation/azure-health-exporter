@@ -101,7 +101,7 @@ Metric | Description
 ------ | -----------
 azure_resource_health_availability_up | [Resource health](https://docs.microsoft.com/en-us/azure/service-health/resource-health-overview) availability that relies on signals from different Azure services to assess whether a resource is healthy. This UP metric is 0 if availability status is `Unavailable`, and is 1 otherwise.
 azure_tag_info | Tags of the Azure resource, exposed only if `expose_azure_tag_info` config is set to true
-azure_resource_health_ratelimit_remaining_count | Azure subscription scoped Resource Health requests remaining (based on `X-Ms-Ratelimit-Remaining-Subscription-Resource-Requests` header)
+azure_resource_health_ratelimit_remaining_requests | Azure subscription scoped Resource Health requests remaining (based on `X-Ms-Ratelimit-Remaining-Subscription-Resource-Requests` header)
 
 Example:
 
@@ -112,9 +112,9 @@ azure_resource_health_availability_up{resource_group="my_group",resource_name="m
 # HELP azure_tag_info Tags of the Azure resource
 # TYPE azure_tag_info gauge
 azure_tag_info{resource_group="my_group",resource_name="my_name",resource_type="Microsoft.Storage/storageAccounts",subscription_id="xxx",tag_monitoring="enabled"} 1
-# HELP azure_resource_health_ratelimit_remaining_count Azure subscription scoped Resource Health requests remaining (based on X-Ms-Ratelimit-Remaining-Subscription-Resource-Requests header)
-# TYPE azure_resource_health_ratelimit_remaining_count gauge
-azure_resource_health_ratelimit_remaining_count{subscription_id="xxx"} 98
+# HELP azure_resource_health_ratelimit_remaining_requests Azure subscription scoped Resource Health requests remaining (based on X-Ms-Ratelimit-Remaining-Subscription-Resource-Requests header)
+# TYPE azure_resource_health_ratelimit_remaining_requests gauge
+azure_resource_health_ratelimit_remaining_requests{subscription_id="xxx"} 98
 ```
 
 ## Contributing
