@@ -11,6 +11,12 @@ This exporter does not export metrics from Azure Monitor API, please use the [az
 This exporter call Azure API from an existing subscription with these requirements:
 
 * An application must be registered (e.g., Azure Active Directory -> App registrations -> New application registration)
+* An secret must be created (e.g., New application-> Certificates & secrets->Client secrets-> New client secret)
+* The Reader Permission must be set (e.g., Subscriptions-> Access control (IAM)-> +Add-> Add role assigment)
+Role: Reader
+Assign access to: Azure AD user, group or service principal
+Select: New application
+
 
 ### API rate limit
 
